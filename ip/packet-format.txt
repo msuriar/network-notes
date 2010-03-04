@@ -1,0 +1,52 @@
+                            IP PACKET FORMAT
+
+
+    0                                 15                                31
+    +--------+--------+----------------+--------------------------------+
+    |  Ver   | HLen   |  DiffServ/TOS  |          Total Length          |
+    +--------+--------+----------------+------+-------------------------+
+    |        Identification            |Flags |  Fragment Offset        |
+    +-----------------+----------------+------+-------------------------+
+    |   Time-To-Live  |    Protocol    |       Header checksum          |
+    +-----------------+----------------+--------------------------------+
+    +                          Source IP Address                        +
+    +-------------------------------------------------------------------+
+    +                     Destination IP Address                        +
+    +-------------------------------------------------------------------+
+    +                        Options and padding                        +
+    +-------------------------------------------------------------------+
+
+
+Ver: Version. 4 for IPv4, 6 for IPv6. (4 bits)
+
+HLen: Header length in 32-bit words. Must be 5 or more. (4 bits)
+
+TOS: type of services. 3 bit precendence, 4 optimisation flags, 1 reserved. Obsoleted by DiffServ (see below). (8 bits)
+
+DiffServ: Differentiated Services. 6 bit code for differentiated services; last two bits reserved. (8 bits). See [RFC 2474, RFC 2597]
+
+Total length: total length of IP packet in octets. (16 bits)
+
+Idenfication: used for fragment reassembly. All fragments from the same original unfragmented PDU share the same ID. (16 bits)
+
+Flags: 3 bit flags.
+
+    +--+--+--+
+    |R |DF|MF|
+    +--+--+--+
+
+	R = reserved
+ DF = don't fragment
+ MF = more fragments
+
+Fragment Offset: Used for fragment reassembly. Indicates ordering information of fragments. (8 bits)
+
+Time-to-live: Unsigned integer, decremented at each L3 hop. If a router decrements the TTL of a packet to 0, the packet is dropped and an ICMP Destination Unreachable (TTL exceeded in transit) is sent to the originator of the IP packet. (8 bits)
+
+Protocol: Integer value indicating next encapsulated protocol. (8 bits)
+
+Header checksum: 16-bit one's complement of the IP header, options and padding.
+
+Source IP address: IP address of the node that sent this packet. (32 bits)
+
+Destination IP address: IP address of the receiving node for this packet. (32 bits)
