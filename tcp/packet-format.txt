@@ -1,0 +1,67 @@
+                            TCP PACKET FORMAT [RFC 793]
+
+    0                                    15                                31
+		+-------------------------------------+--------------------------------+
+		|            Source port              |     Destination port           |
+		+----------------------------------------------------------------------+
+		|                          Sequence number                             |
+		+----------------------------------------------------------------------+
+		|                       Acknowledgement number                         |
+		+--------+----------+--+--+--+--+--+--+--------------------------------+
+    |TCP Hlen|xxxxxxxxxx|UR|AC|PS|RS|SY|FI|         Window size            |
+    +--------+----------+--+--+--+--+--+--+--------------------------------+
+		|            Checksum                 |     Urgent pointer             |
+		+----------------------------------------------------------------------+
+		|                                Options                               |
+		+----------------------------------------------------------------------+
+
+Source port: 16-bit unsigned integer, 0-65,535
+
+Destination port: 16-bit unsigned integer, 0-65,535
+
+Sequence number: 32-bit unsigned integer. Each byte in a TCP stream is sequenced; indicates the sequence number of the first data byte in this segment.
+
+Acknowledgement number: 32-bit unsigned integer. Indicates the next sequence number the stattion sending this segment expects to see from its counter-party. Note that an acknowledgement number of 'X' indicates that all bytes with a sequence number < X have been received.
+
+TCP Header Length: Length of header in 32-bit words. (4 bits)
+
+Urgent flag: Segment contains urgent data to be sent to the application immediately.
+
+Acknowledgement flag: This segment contains an acknowledgement of data receipt.
+
+Push flag: Receiver should not buffer this data; rather it (and any data queued for transmission to the application layer) should be transmitter immediately.
+
+Reset flag: Reset a broken connection; reject invalid segment; refuse to open a new connection.
+
+SYN flag: Short for 'synchronise'. This flag indicates a new connection. If the ACK flag in the same segment is set to 0, this is a new connection request. If the ACK flag is set to 1, this is a response to a new connection request indicating 'connection request accepted'.
+
+FIN flag: The sender has more data to send but will still accept data.
+
+Window size: 16-bit unsigned integer, advertising how must data the receiver can buffer (i.e. how much data the sender can transmit before waiting for an acknowledgment). An advertised receive window of '0' means that the counterparty should stop sending data.
+
+Checksum: 16-bit one's complement sum of the TCP header + data + IPv4 pseudo-header (see below). If the TCP header + data contains an odd number of octets, data is padded with zeros for the purposes of checksum calculation *only*.
+
+IPv4 Pseudo-header used in TCP checksum calculation:
+
+    0                                15                                31
+    +------------------------------------------------------------------+
+    |                        Source Address                            |
+    +------------------------------------------------------------------+
+    |                     Destination Address                          |
+    +----------------+----------------+--------------------------------+
+    |0 0 0 0 0 0 0 0 |     Protocol   |       TCP segment length       |
+    +----------------+----------------+--------------------------------+
+
+When the TCP checksum is calculated, the checksum field itself is set to a value of all zeros. Therefore, when the receiver runs the checksum algorithm with the checksum field containing the non-zero value calculated by the sender, the result of the checksum calculation shoudl be 0.
+
+The TCP segment length in the pseudo-header includes the TCP header.
+
+Urgent pointer: 16-bit unsigned integer, indicating the offset (in bytes) from the start of the segment to the point where the urgent data ends. Ignored if the urgent flag is not set on this segment.
+
+Options: a means of adding new facilities not implemented in the standard TCP header. Of particular interest are the following:
+
+    - Maximum segment size (MSS) [RFC 879]
+    - TCP window scaling [RFC 1823]
+    - TCP selective ACK (SACK) [RFC 1106]
+
+Options must be multiples of 8-bits in length. They are either 1 octet (the option code itself), or a TLV triple (option, option length in octets, [option data]*).
