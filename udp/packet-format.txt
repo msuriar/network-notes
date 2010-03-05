@@ -1,0 +1,17 @@
+                            UDP PACKET FORMAT
+
+
+    0                                 15                                31
+    +----------------------------------+--------------------------------+
+    |           Source port            |      Destination port          |
+    +----------------------------------+--------------------------------+
+    |           UDP Length             |      UDP Checksum              |
+    +----------------------------------+--------------------------------+
+
+Source port: 16-bit unsigned integer, 0-65,535
+
+Destination port: 16-bit unsigned integer, 0-65,535
+
+UDP length: UDP length, including header, in octets.
+
+UDP checksum: 16-bit 1's complement of header and payload.

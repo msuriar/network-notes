@@ -1,0 +1,30 @@
+Value,Protocol
+53,DNS
+67,BOOTP Server
+68,BOOTP Client
+69,TFTP
+79,Finger
+88,Kerberos
+111,Sun RPC
+123,NTP
+137,NetBIOS Name Service
+138,NetBIOS Datagram
+139,NetBIOS Session
+161,SNMP
+162,SNMP trap
+389,LDAP
+445,Microsoft Directory Service
+500,ISAKMP
+520,RIP
+521,RIPng
+666,Doom
+873,rsync
+1080,SOCKS
+1512,WINS
+1718,H.323 Gateway Discovery
+1719,H.323 Gateway
+1720,H.323 Host call
+1723,PPTP
+2049,NFS
+5353,mDNS
+6000-6063,X11
