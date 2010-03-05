@@ -1,0 +1,22 @@
+TCP WINOW SCALING [RFC 1323]
+
+By default, TCP only supports a window of 65,536 bytes (64Kbytes). This means that a receiver may only transmit 64KBytes of data before waiting for an acknowledgement. On high latency and/or high bandwidth links, this can lead to a significant reduction in the effective throughput for a single TCP connection.
+
+The effective throughput of a TCP connection is limited to:
+
+    Window size/latency
+
+Without window scaling enabled, TCP defaults to a window size of:
+    65,536 bytes = 524,288 bits.
+
+Assuming a latency of 100ms, and the above window size, te maximum achievable bandwidth for a single TCP connection can be calculated.
+
+100ms = 0.1s
+
+Throughput (bits/sec) = window size (bits)/latency (sec)
+                      = 524,288/0.1
+                      = 5,242,880 bps
+                      = 655,360 Bps
+                      = 655.36 KBps
+
+The TCP window scaling option allows TCP participants to scale their receive windows, eliminating this bottleneck.

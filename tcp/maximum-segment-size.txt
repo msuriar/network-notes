@@ -1,0 +1,17 @@
+TCP MAXIMUM SEGMENT SIZE [RFC 879]
+
+    +----------------+----------------+--------------------------------+
+    |  Type (2)      |  Length (4)    | Maximum segment size (bytes)   |
+    +----------------+----------------+--------------------------------+
+
+TCP maximum segment size is a way of ensuring that TCP does not send segments larger than the data field of an IP MTU. This helps to avoid IP fragmentation, which can have significant impact upon performance/throughput.
+
+Default IP MTU = 576
+Default TCP MSS = MTU - 40 bytes = 536 bytes
+
+The maximum segment size option MUST be specified in SYN packets; the MSS is a value that is used for the lifetime of the TCP connection.
+
+TCP MSS is independent in each direction.
+
+TCP MSS counts data octets only. Hence:
+    MSS = MTU - (TCP header + iP header)
