@@ -16,3 +16,6 @@
 17.0.0.224.in-addr.arpa domain name pointer ALL-SBMS.MCAST.NET.
 18.0.0.224.in-addr.arpa domain name pointer VRRP.MCAST.NET.
 19.0.0.224.in-addr.arpa domain name pointer IPALLL1ISS.MCAST.NET.
+20.0.0.224.in-addr.arpa domain name pointer IPALLL2ISS.MCAST.NET.
+21.0.0.224.in-addr.arpa domain name pointer IPALLINTERMEDIATESYSTEMS.MCAST.NET.
+22.0.0.224.in-addr.arpa domain name pointer IGMP.MCAST.NET.
