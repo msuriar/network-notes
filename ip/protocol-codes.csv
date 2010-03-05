@@ -1,0 +1,19 @@
+Value,Protocol
+1,ICMP
+2,IGMP
+4,IP in IP encapsulation
+6,TCP
+17,UDP
+41,IPv6 over IPv4
+46,RSVP
+47,GRE
+50,Encapsulating Security Payload (IPsec)
+51,Authentication Header (IPsec)
+88,[E]IGRP
+89,[M]OSPF
+94,IP-within-IP encapsulation
+103,PIM
+112,VRRP
+115,L2TP
+124,ISIS over IPv4
+137,MPLS over IP
