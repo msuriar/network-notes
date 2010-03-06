@@ -1,15 +1,15 @@
 TCP WINOW SCALING [RFC 1323]
 
-By default, TCP only supports a window of 65,536 bytes (64Kbytes). This means that a receiver may only transmit 64KBytes of data before waiting for an acknowledgement. On high latency and/or high bandwidth links, this can lead to a significant reduction in the effective throughput for a single TCP connection.
+By default, TCP only supports a window of 65,536 bytes (64Kbytes). This means that a receiver may only transmit 64 KBytes of data before waiting for an acknowledgement. On high latency and/or high bandwidth links, this can lead to a significant reduction in the effective throughput for a single TCP connection.
 
 The effective throughput of a TCP connection is limited to:
 
     Window size/latency
 
 Without window scaling enabled, TCP defaults to a window size of:
-    65,536 bytes = 524,288 bits.
+    65,536 bytes = 524,288 bits
 
-Assuming a latency of 100ms, and the above window size, te maximum achievable bandwidth for a single TCP connection can be calculated.
+Assuming a latency of 100ms, and the above window size, the maximum achievable bandwidth for a single TCP connection can be calculated.
 
 100ms = 0.1s
 
@@ -20,3 +20,16 @@ Throughput (bits/sec) = window size (bits)/latency (sec)
                       = 655.36 KBps
 
 The TCP window scaling option allows TCP participants to scale their receive windows, eliminating this bottleneck.
+
+TCP window scaling is set on a SYN. The presence of the option indicates that the sender supports window scaling. The scaling factor indicates how much the advertised window should be scaled by. The scaling factor is the exponent; i.e. given a scaling factor value of N, the advertised window should be multiplied by a factor of 2^N.
+
+Note that even if a sending device is not intending on scaling its receive window, it should still specify the option in its SYN packet with a shift count of 0 (i.e. a scaling factor of 1). This indicates that the device supports scaling to the other member of the TCP conversation, giving them the choice to employ window scaling if so desired.
+
+    0                7               15                23
+    +----------------+----------------+----------------+
+    |       Type     |     Length     |  Shift count   |
+    +----------------+----------------+----------------+
+
+Type: TCP option type. Window option number = 3
+Length: Length of this TCP option. MSS option always has a length of 3.
+Shift count: exponent to raise scaling factor by. Value is between 0 and 14, making max window 2^30 bytes, ~1 Gbyte.

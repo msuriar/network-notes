@@ -14,4 +14,4 @@ The maximum segment size option MUST be specified in SYN packets; the MSS is a v
 TCP MSS is independent in each direction.
 
 TCP MSS counts data octets only. Hence:
-    MSS = MTU - (TCP header + iP header)
+    MSS = MTU - (TCP header + IP header)

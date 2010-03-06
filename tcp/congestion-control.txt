@@ -1,0 +1,55 @@
+TCP CONGESTION CONTROL [RFC 2581]
+
+TCP congestion control details several mechanisms through which TCP detects and responds to congestion in the network.
+
+DEFINITIONS:
+SMSS: Sender maximum segment size. (576 octets, if TCP MSS option is not used)
+RMSS: Receiver maximum segment size. (576 octets, if TCP MSS option is not used)
+RWND: Most recently advertised receiver window.
+CWND: Congestion window; TCP state variable. A sender MUST NOT send data with SEQ > (ACK + min {RWND, CWND}).
+IW: Initial window size. Size of congestion window after 3-way handshake.
+LW: Loss window size. Size of congestion window after a sender detects loss due to retransmission timer.
+RW: Restart window size. Size of congestion window after idle peiod. (See TCP slow start).
+FLIGHT SIZE: The amount of data sent but not ACKed.
+SSTHRESH: slow start threshold; determines whether 'slow start' or 'congestion avoidance' is used.
+
+SLOW START/CONGESTION AVOIDANCE
+
+IW MUST be <= 2 * SMSS. (Initially, no more than 2 MSS worth of data may be in flight.)
+
+		if (CWND < SSTHRESH) then 'slow-start' in use
+		else if (CWND > SSTHRESH) then 'congestion avoidance' in use
+		else use either
+
+During 'slow start', CWND is incremented by 1 RMSS for every ACK received which is ACKing new data.
+
+During congestion avoidance, CWND is incremented by 1 RMSS every RTT.
+
+Whenever a sender's retransmission timer is triggered, SSTHRESH must be adjusted.
+
+		SSTHRESH = max(FLIGHT SIZE /{2, 2*SMSS})
+
+On  a timeout, CWND must be set to LW =  1*RMSS. After retransmission, SS kicked in until CWND reaches the new SSTHRESH.
+
+
+FAST RETRANSMIT/FAST RECOVERY [RFC 2581]
+
+A receiver SHOULD send an immediate DUPACK on recipt of an out-of-order segment. This can be caused by loss or reordering. When an incoming segment fills a gap, an immediate ACK should also be sent.
+
+A sender SHOULD use "fast retransmit" to repair loss. 3 DUPACKs (4 ACKs for the same SEQ) should trigger an immediate retransmission, without waiting for retransmission timer expiration of next SEQ.
+
+Detail:
+1) After 3rd DUPACK, SSTHRESH = max(FLIGHT SIZE /{2, 2*SMSS}). (3rd DUPACK is equivalent to detection of loss.)
+2) Retransmit, then set CWND = SSTHRESH + 3*SMSS. (3 DUPACKs => 3 segments received after the lost segment.)
+3) For each subsequent DUPACK, increment CWND by SMSS.
+4) Transmit next segment, if permitted by RWND and CWND.
+5) Once new data is ACKed, set SSTHRESH as (1).
+
+SLOW START AFTER IDLE
+In some implementations, if a segment has not been received within one retransmission timeout, CWND is reduced to RW.
+
+DELAYED ACK [RFC 2581, RFC 1122]
+An ACK SHOULD be generated for every 2 MSS of data received. An ACK MUST be generated within 500ms of receipt of the data to be ACKed.
+
+NAGLE'S ALGORITHM
+If a receiver receives < 1 MSS of data, *while* there is un-ACKed data in flight, wait until the receiver has more data to send or the ACK comes back, before sending his own ACK.
