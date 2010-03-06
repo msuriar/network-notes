@@ -1,0 +1,23 @@
+OSPF PROTOCOL OVERVIEW [RFC 2328, RFC 1587]
+
+OSPF is a link-state routing protocol; an open standard based on Djikstra's algorithm. It uses reliable flooding to ensure information about network topology is flooded throughout an autonomous system.
+
+OSPF uses a single, dimensionless metric. Each interface in OSPF has a cost associated with it. The default cost as calculated by Cisco is 10^8/bandwidth. OSPF cost is an integer, so all interfaces with a speed of 100Mbps or more end up with an OSPF cost of 1.
+
+Areas are used to provide stability and scalability, but abstracting the topology of an area away from those routers outside that area.
+
+OSPF consists of four main components.
+
+Hello protocol: this is used for neighbour discovery, as well as dead neighbour detection.
+
+Adjacencies: if the parameters specified in the Hello protocol are configured correctly across both neighbours, and some other conditions are met (particularly in NBMA/broadcast networks), the neighbors will become ADJACENT. LSAs are only flooded to adjacent neighbors.
+
+Database: the link-state database for an OSPF area is the sum of all router link states from within that area.
+
+Flooding: LSAs (link-state advertisements) are flooded throughout an area, and summarised by area border routers.
+
+BASIC OSPF OPERATION
+
+
+AREAS
+An OSPF AS is di
