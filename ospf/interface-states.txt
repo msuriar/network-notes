@@ -1,0 +1,8 @@
+State,Description
+DOWN,Admin or operational down.
+P2P,Up and connected to a point-to-point link. Hellos are multicast to ALLSPFROUTERS reserved address.
+WAITING,NBMA/Broadcast networks only. Used for existing DR detection when an inteface comes up connected to a multi-access network.
+DR,This router is the designated router for this multi-access network.
+BDR,This router is the backup designated router for this multi-access network.
+DROTHER,This router is not the DR or BDR for this multi-access network.
+LOOP,This interface is looped, either in software or hardware.

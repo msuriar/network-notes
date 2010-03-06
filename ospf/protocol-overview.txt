@@ -1,10 +1,10 @@
 OSPF PROTOCOL OVERVIEW [RFC 2328, RFC 1587]
 
-OSPF is a link-state routing protocol; an open standard based on Djikstra's algorithm. It uses reliable flooding to ensure information about network topology is flooded throughout an autonomous system.
+OSPF is a link-state routing protocol; an open standard based on Djikstra's shortest-path algorithm. It uses reliable flooding to ensure information about network topology is flooded throughout an autonomous system.
 
 OSPF uses a single, dimensionless metric. Each interface in OSPF has a cost associated with it. The default cost as calculated by Cisco is 10^8/bandwidth. OSPF cost is an integer, so all interfaces with a speed of 100Mbps or more end up with an OSPF cost of 1.
 
-Areas are used to provide stability and scalability, but abstracting the topology of an area away from those routers outside that area.
+Areas are used to provide stability and scalability, by abstracting the topology of an area away from those routers outside that area.
 
 OSPF consists of four main components.
 
@@ -21,11 +21,41 @@ Each router in an OSPF AS is considered to have one or more INTERFACES (a.k.a LI
 
 Each OSPF router has a router-ID, a 32-bit integer which is used to uniquely identify a router within an OSPF AS. Normally expressed as a dotted decimal, but not subject to the same restrictions as IP addresses. By default, the highest numbered loopback interface address is used. If there are no loopback interfaces, the highest numbered physical interface address is used.
 
-Within a single area, each router originates an LSA (link-state advertisement) detailing all its connected interfaces within that area, the cost of that interface, and the router-IDs (RIDs) of neighbours that have been discovered on each interface. On each router running OSPF, for each link within the area, Djikstra's shortest path algorithm is run with the current node as the root of the tree. Once the shortest path tree has been calculated, it is used to select one or more minimum cost route to each link (= IP prefix) as a candidate for installation in the global routing table.
+OSPF routers send 'Hello' packets out via all interfaces configured to run OSPF, detailing their router-ID and several other parameters, as a means of locating other possible OSPF speakers. On 'Point-to-point' and 'broadcast' interfaces, OSPF Hellos are multicast to the reserved multicast address 224.0.0.5, ALLSPFROUTERS. On point-to-multipoint and non-broadcast networks, Hellos are unicast; neighbour information on such networks is either manually configured or discovered dynamically through mechanisms such as Inverse-ARP. (On P2P/Broadcast networks, neighbours are discovered through the receipt of multicast hellos, so manual configuration is not required).
+
+Within a single area, each router originates an LSA (link-state advertisement) detailing all its connected interfaces within that area, the cost of that interface, and the router-IDs (RIDs) of neighbours that have been discovered on each interface. On each router running OSPF, for each link within the area, Djikstra's shortest path algorithm is run with the current node as the root of the tree. Once the shortest path tree has been calculated, it is used to select one or more minimum cost route to each link (= IP prefix) as a candidate for installation in the global routing table. This is the 'Type-1' or 'Router' link-state advertisement, which is the foundation of the link-state database. A router LSA exists for every router in the OSPF AS, and is used to build the topology database against which the SPF algorithm is run.
+
+Within an area, router LSAs are flooded to all adjacent neighbours other than the one that originated the LSAs. This flooding is reliable, ensuring that all OSPF speakers within an area have and up-to-date version of the link-state database against which to run the SPF algorithm.
+
+On multi-access networks ('Non-Broadcast Multiple Access' and 'Broadcast' networks), such as Ethernet LANs or frame-relay/MPLS clouds, OSPF's system of adjacencies and flooding can lead to large amounts of redundant traffic. Consider a multi-access network with 5 routers; assuming each one forms an adjancency with every other, this leads to a total of 10 adjacencies. More generally, a multi-access network with N-connected OSPF speakers will require (N(N-1)/2) adjacencies, assuming all speakers become adjacent. OSPF attempts to address this issue through the use of 'Designated Routers' (DRs) and 'Type-2'/'Network' LSAs, the use of which allows the number of adjacencies and LSAs on a multi-access network to be substantially reduced. See MULTI-ACCESS NETWORKS.
 
 AREAS
 As the number of routers and links in an OSPF area increases, the CPU and memory required to maintain the link-state database and to perform SPF calculations increases. If an OSPF AS consists of a single area, all routers within the AS must be capable of maintaining the full OSPF database. Furthermore, instability in any part of the network (e.g. a flapping link/device) will result in LSAs being flooded to all routers in the AS and triggering SPF recalculations, causing CPU resource to be consumed.
 
-OSPF attempts to address these concerns through the use of AREAS. Each router interface is associated with an OSPF area. An interface may only be part of one area, however, a router may support interfaces in multiple different areas. NOTE: if a router is configured with interfaces in multiple areas, it MUST have at least one interface in the backbone area 0.
+OSPF attempts to address these concerns through the use of AREAS. Each router interface is associated with an OSPF area. An interface may only be part of one area, however, a router may support interfaces in multiple different areas. NOTE: if a router is configured with interfaces in multiple areas, it MUST have at least one interface in the backbone area 0. All traffic between areas traverses
 
-An OSPF router maintains a separate link-state database for each area it has interfaces in.
+An OSPF router maintains a separate link-state database only for each area it has interfaces in; therefore CPU and memory utilisation in routers in the network only connected to a single area are reduced. Information about routes external to an area is provided through the use of AREA BORDER ROUTERS (ABRs), which summarise information about links in other areas and flood them into an area. These summaries (communicated through the use of 'Type-3' or 'Network Summary' LSAs, do not contain topology information; they only provide the cost from the originating ABR to each inter-area destination.
+
+ABRs contain full topology information for each of their attached areas, including the backbone. This provides them with sufficient information to route traffic to any destination in the backbone. They also receive summary information for all non-attached, non-backbone areas by way of Type-3 LSAs received from other ABRs connected to the backbone; this provides them with sufficient information to forward traffic to prefixes within these areas. Once the traffic is forwarded to an ABR connected to the destination area, that ABR can use it's full LSDB for the destination area to forward the traffic to the endpoint.
+
+Hence a router internal to a non-backbone area need only know how to get to its ABRs; the ABRs will then forward inter-area traffic based on the summary information they receive from other areas' ABRs.
+
+This has implications for the performance characteristics of routers in various roles. Thus far, the routers we have described fit into three overlapping categories:
+
+* Backbone routers: routers which have at least one interface in area 0.
+* Internal routers: routers which only have interfaces in a single OSPF area.
+* Area border routers: routers which have interfaces in multiple OSPF areas, including at least one in area 0. (The backbone.)
+
+Internal routers, belonging to either backbone or non-backbone areas, must maintain the link-state database for their own area, as well as Type-3 summary LSAs for all inter-area routes. They need only run the SPF calculation for their own area; network summaries are attached to the shortest-path tree as leaf nodes attached to the ABRs.
+
+Area border routers must maintain the full link-state database for area 0, as well as any other directly attached areas. They will also maintain summary information for any non-attached, non-backbone areas. This means that they will generally have greater performance requirements than internal routers.
+
+AS-EXTERNAL ROUTES
+
+OSPF is designed as a IGP (interior gateway protocol), that is, for distributing routing information between routers in a single administrative domain (autonomous system). However, many networks have a requirement to connect to prefixes outside their own AS. Information about these prefixes is usually obtained through either static routing, or through the use of some EGP (exterior gateway protocol) such as BGP.
+
+In either case, in order for all devices in the OSPF AS to have reachability of these prefixes, they must be redistributed into OSPF and flooded throughout the AS. This is done through the use of 'Type-4'/'ASBR Summary' and 'Type-5'/'Network External'  LSAs. These LSAs are flooded throughout the autonomous system, except in the case of stub areas. (See STUB AREAS).
+
+OSPF PACKETS
+
+OSPF runs directly over IP, using protocol number 89. For type and format details, see [packet-types] and [packet-formats]. 

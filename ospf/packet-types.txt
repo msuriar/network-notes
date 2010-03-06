@@ -1,0 +1,6 @@
+Type,Name,Function
+1,Hello,Neighbour discovery/maintenance
+2,Database description,Summary of database content, used in building adjacency
+3,Link State Request,Database download
+4,Link State Update,Database update
+5,Link State Ack,Flooding acknowledgement

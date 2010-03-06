@@ -1,0 +1,6 @@
+Type,Name,Description
+1,Router-LSA,Originated by all routers. Describes the collected information about all the router's interfaces to an area. Flooded within a single area.
+2,Network-LSA,Originated for broadcast/NBMA networks by the DR. Contains a list of routers connected to the network. Flooded throughout a single area only.
+3,Network-Summary-LSA,Originated by ABRs and flooded throughout the LSA's associated area. Each summary describes a route to a network outside the area but still within the OSPF AS.
+4,ASBR-Summary-LSA,Originated by ABRs and flooded throughout the LSA's associated area. Describes the route to an ASBR (autonomous system boundary router) which originates routes to prefixes outside the OSPF AS.
+5,AS-External-LSA,Originated by ASBRs and flooded throughout the OSPF AS. Each describes a route to a destination in another autonomous system. Can also be used to originate a default route for the AS.
