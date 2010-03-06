@@ -1,12 +1,12 @@
-Type,Name,Description
-1,Router-LSA,Originated by all routers. Describes the collected information about all the router's interfaces to an area. Flooded within a single area.
-2,Network-LSA,Originated for broadcast/NBMA networks by the DR. Contains a list of routers connected to the network. Flooded throughout a single area only.
-3,Network-Summary-LSA,Originated by ABRs and flooded throughout the LSA's associated area. Each summary describes a route to a network outside the area but still within the OSPF AS.
-4,ASBR-Summary-LSA,Originated by ABRs and flooded throughout the LSA's associated area. Describes the route to an ASBR (autonomous system boundary router) which originates routes to prefixes outside the OSPF AS.
-5,AS-External-LSA,Originated by ASBRs and flooded throughout the OSPF AS. Each describes a route to a destination in another autonomous system. Can also be used to originate a default route for the AS.
-6,Group-Membership-LSA,Used in MOSPF.
-7,NSSA-External-LSA,Used in Not-so-stubby areas. ABR with the highest RID will perform 7-5 conversion for the rest of the AS.
-8,External-Attributes-LSA,Unknown
-9,Opaque-LSA,Link local scope.
-10,Opaque-LSA,Area local scope.
-11,Opaque-LSA,AS wide scope.
+Type,Name,Description,Link State ID
+1,Router-LSA,Originated by all routers. Describes the collected information about all the router's interfaces to an area. Flooded within a single area.,Originating router's RID.
+2,Network-LSA,Originated for broadcast/NBMA networks by the DR. Contains a list of routers connected to the network. Flooded throughout a single area only.,IP interface address of the network's DR.
+3,Network-Summary-LSA,Originated by ABRs and flooded throughout the LSA's associated area. Each summary describes a route to a network outside the area but still within the OSPF AS.,Detination network's IP address.
+4,ASBR-Summary-LSA,Originated by ABRs and flooded throughout the LSA's associated area. Describes the route to an ASBR (autonomous system boundary router) which originates routes to prefixes outside the OSPF AS.,Router ID of the described ASBR.
+5,AS-External-LSA,Originated by ASBRs and flooded throughout the OSPF AS. Each describes a route to a destination in another autonomous system. Can also be used to originate a default route for the AS.,Destination network's IP address.
+6,Group-Membership-LSA,Used in MOSPF.,Multicast group address(?)
+7,NSSA-External-LSA,Used in Not-so-stubby areas. ABR with the highest RID will perform 7-5 conversion for the rest of the AS.,Destination network's IP address.
+8,External-Attributes-LSA,Unknown,?
+9,Opaque-LSA,Link local scope.,?
+10,Opaque-LSA,Area local scope.,?
+11,Opaque-LSA,AS wide scope.,?
