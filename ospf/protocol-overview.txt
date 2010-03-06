@@ -17,7 +17,15 @@ Database: the link-state database for an OSPF area is the sum of all router link
 Flooding: LSAs (link-state advertisements) are flooded throughout an area, and summarised by area border routers.
 
 BASIC OSPF OPERATION
+Each router in an OSPF AS is considered to have one or more INTERFACES (a.k.a LINKS). Each INTERFACE is associated with an AREA. Each interface may only be configured in one area, however a router may contain interfaces in multiple areas. (See AREAS.)
 
+Each OSPF router has a router-ID, a 32-bit integer which is used to uniquely identify a router within an OSPF AS. Normally expressed as a dotted decimal, but not subject to the same restrictions as IP addresses. By default, the highest numbered loopback interface address is used. If there are no loopback interfaces, the highest numbered physical interface address is used.
+
+Within a single area, each router originates an LSA (link-state advertisement) detailing all its connected interfaces within that area, the cost of that interface, and the router-IDs (RIDs) of neighbours that have been discovered on each interface. On each router running OSPF, for each link within the area, Djikstra's shortest path algorithm is run with the current node as the root of the tree. Once the shortest path tree has been calculated, it is used to select one or more minimum cost route to each link (= IP prefix) as a candidate for installation in the global routing table.
 
 AREAS
-An OSPF AS is di
+As the number of routers and links in an OSPF area increases, the CPU and memory required to maintain the link-state database and to perform SPF calculations increases. If an OSPF AS consists of a single area, all routers within the AS must be capable of maintaining the full OSPF database. Furthermore, instability in any part of the network (e.g. a flapping link/device) will result in LSAs being flooded to all routers in the AS and triggering SPF recalculations, causing CPU resource to be consumed.
+
+OSPF attempts to address these concerns through the use of AREAS. Each router interface is associated with an OSPF area. An interface may only be part of one area, however, a router may support interfaces in multiple different areas. NOTE: if a router is configured with interfaces in multiple areas, it MUST have at least one interface in the backbone area 0.
+
+An OSPF router maintains a separate link-state database for each area it has interfaces in.
