@@ -1,0 +1,47 @@
+TCP SELECTIVE ACKNOWLEDGEMENT [RFC 2018]
+
+TCP uses cumulative ACK by default. A TCP segment with the 'ACK' bit set, and the ACK field set to number 'N', signals the following:
+
+* The next data byte I expect to receive should be the one with sequence number 'N'.
+* All data bytes with a sequence number less than 'N' have been received.
+
+This means that if a burst of errors occurs, each ACK may only report one piece of loss.
+
+Assume data segments 1 .. 50, with a burst of errors meaning that segments 20-25 were lost. The receiving station will continue to send segments with an ACK of 20, until segment 20 is retransmitted. At this point, the receiver will start sending ACKs of 21, and so on.
+
+TCP selective ACK (SACK) was designed to allow a TCP receiver to advertise non-contiguous blocks of data which have been received. This information in turn allows the TCP sender to make more intelligent retransmission decisions.
+
+TCP SACK introduces two new TCP option fields:
+* SACK permitted: option set in SYN, indicating that the host sending the SYN supports the receipt of selective-ACK.
+* SACK option: the list of start and end SEQ numbers of non-contiguous data blocks received.
+
+SACK-PERMITTED
+
+    0                7                15
+    +----------------+----------------+
+    |     Type       |    Length      |
+    +----------------+----------------+
+
+Type: TCP SACK permitted has TCP option type code 4.
+Length: The TCP SACK permitted option is always 2 octets long.
+
+SACK OPTION
+
+The SACK option indicates the non-contiguous blocks that have been received. The semantics of the ACK number are unchanged. A SACK must contain the block which triggered its generation, unless that block advanced the ACK number; this is to provice the most up-to-date information possible.
+
+    0                7                15               23               31
+    +----------------+----------------+----------------+----------------+
+    |XXXX(NO-OP)XXXXX|XXXX(NO-OP)XXXXX|     Type       |     Length     |
+    +----------------+----------------+----------------+----------------+
+    |                  Left edge of block 1                             |
+    +-------------------------------------------------------------------+
+    |                  Right edge of block 1                            |
+    +-------------------------------------------------------------------+
+    |                                                                   |
+    +                                                                   +
+    |                                                                   |
+    +-------------------------------------------------------------------+
+    |                  Left edge of block N                             |
+    +-------------------------------------------------------------------+
+    |                  Right edge of block N                            |
+    +-------------------------------------------------------------------+
