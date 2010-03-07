@@ -1,4 +1,4 @@
-OSPF PROTOCOL OVERVIEW [RFC 2328, RFC 1587]
+OSPF PROTOCOL OVERVIEW [RFC 2328, RFC 3101]
 
 OSPF is a link-state routing protocol; an open standard based on Djikstra's shortest-path algorithm. It uses reliable flooding to ensure information about network topology is flooded throughout an autonomous system.
 
@@ -50,12 +50,69 @@ Internal routers, belonging to either backbone or non-backbone areas, must maint
 
 Area border routers must maintain the full link-state database for area 0, as well as any other directly attached areas. They will also maintain summary information for any non-attached, non-backbone areas. This means that they will generally have greater performance requirements than internal routers.
 
+Note that when an ABR receives multiple LSAs for the same prefix, only *one* Type-3 LSA will be originated into other areas. The least cost of all the alternatives available will be used in the newly generated Type-3.
+
+ADDRESS SUMMARISATION
+
+Areas are also naturally related to IP address summarisation, as they provide an ideal control point through which to apply summaries. OSPF area address ranges provide a way of reducing the amount of routing information advertised between areas. Consider an ABR with the following routes to prefixes in area 10:
+
+	10.10.0.0/24
+	10.10.1.0/24
+	10.10.2.0/24
+	10.10.3.0/24
+
+These prefixes can be summarised as a single IP prefix when advertised to other areas, including the backbone:
+
+	10.10.0.0/22
+
+This can be accomplished through the use of 'area address ranges'. When an OSPF ABR is configured with an 'area address range' for an area, it originates a single network-summary-LSA for that range, rather than one for each component network of the summary. This summary-LSA will be advertised with a cost equal to the HIGHEST cost of all the LSAs relating to constituent networks.
+
+When a 'area address range' is configured on an ABR, that ABR MUST insert a 'discard' entry in its local routing table for the summary range. (Null0 on Cisco). This is to prevent loops from occurring when traffic is routed to an address within the summary for which the ABR does not have a specific route.
+
 AS-EXTERNAL ROUTES
 
-OSPF is designed as a IGP (interior gateway protocol), that is, for distributing routing information between routers in a single administrative domain (autonomous system). However, many networks have a requirement to connect to prefixes outside their own AS. Information about these prefixes is usually obtained through either static routing, or through the use of some EGP (exterior gateway protocol) such as BGP.
+OSPF is designed as an IGP (interior gateway protocol), that is, for distributing routing information between routers in a single administrative domain (autonomous system). However, many networks have a requirement to connect to prefixes outside their own AS. Information about these prefixes is usually obtained through either static routing, or through the use of some EGP (exterior gateway protocol) such as BGP.
 
 In either case, in order for all devices in the OSPF AS to have reachability of these prefixes, they must be redistributed into OSPF and flooded throughout the AS. This is done through the use of 'Type-4'/'ASBR Summary' and 'Type-5'/'Network External'  LSAs. These LSAs are flooded throughout the autonomous system, except in the case of stub areas. (See STUB AREAS).
 
+Type-4/ASBR-Summary LSAs are originated by ABRs of the area containing the ASBR. They are flooded throughout the OSPF AS, except the area within the ASBR in question resides. (Note that routers within the ASBR's area will already have a Type-1/Router LSA for the ASBR, and hence the Type-4/ASBR-Summary LSA is not required.) Type-4/ASBR-Summary LSAs are also not flooded into OSPF stub areas.
+
+Type-5/AS-External LSAs are originated by ASBRs, and are flooded unmodified throughout the entire OSPF AS. Again, AS-External LSAs are not flooded into stub areas.
+
+STUB AREAS
+
+Many OSPF areas are do not originate AS-external LSAs, nor do they require detailed information about the topology of other areas. In these cases, a default route towards the ABRs is often sufficient to ensure connectivity to inter-area and AS external destinations.
+
+OSPF facilitates such topologies through the use of stub areas. In standard stub areas, Type-4/ASBR-Summary and Type-5/AS-External LSAs are not flooded in to stub areas; they are replaced by a single summary default route originated by one or more of the ABRs. This summary default is flooded only through the stub area.
+
+All routers within a stub area must agree that the area is a stub; if this agreement is not in place, OSPF adjacencies will not form.
+
+Virtual links may not be configured through a stub area; further more, ASBRs may not be located internal to a stub area.
+
+TOTALLY STUBBY AREAS
+
+This is a Cisco term, which refers to an extension to the stub area concept. In addition to restricting the flood of Type-4/ASBR-Summary and Type-5/AS-External LSAs into a stub area, when a totally stubby area is configured, no Type-3/Network-Summary LSAs are originated by the area's ABRs. All inter-area traffic is then routed by the default summary route, with only intra-area traffic relying upon specific information in the link-state database.
+
+RFC 2328 leaves the question of whether Type-3/Network-Summary LSAs should be originated into stub areas open; Cisco chooses to refer to a stub area where no Type-3/Network LSAs are present as a totally stubby area.
+
+NOT-SO-STUBBY-AREAS [RFC 3101]
+
+One limitation of stub areas is their inability to support ASBRs. There are often instances where it is beneficial for a non-backbone area to be able to inject AS-External routes, but to only have default routes to for inter-area traffic.
+
+OSPF supports this functionality though the use of an OSPF option, the NSSA (N-bit). All routers within an NSSA must have the N-bit set in their Hello packets, otherwise adjacencies will not form.
+
+Any router within an NSSA may originate a Type-7/NSSA-External LSA, detailing the reachability of AS-external destinations. Type-7 LSAs are never flooded beyond their originating area. As with stub areas, Type-4/ASBR-Summary and Type-5/AS-External LSAs are not flooded in to NSSAs, nor are they originated there.
+
+In order to allow OSPF routers outside of the NSSA to reach AS-External destinations advertised within an NSSA, NSSA ABRs perform translation of Type-7/NSSA-External LSAs in to Type-5/AS-External LSAs for origination into the backbone. From this point, these Type-5 LSAs will be flooded throughout the rest of the OSPF AS as per OSPF's normal flooding logic.
+
+NSSA ABRs may be configured with area address ranges for AS-External addresses, which result in multiple Type-7 LSAs being translated into a single Type-5 LSA throughout the rest of the OSPF AS. The NSSA border routers that perform 7-5 translation are configurable; in the absence of configuration, a translator is elected. (Cisco use the ABR with the highest RID as the 7-5 translator).
+
+NSSA ABRs should originate a default Type-7 LSA into the NSSA. This default should never be translated into a Type-5 LSA; however, a default route originated by an NSSA internal ASBR may be translated into a Type-5 LSA and flooded throughout the rest of the AS. This is controlled by the 'P-bit' (propagate) in the Type-7 LSA.
+
+Like Type-5 stub areas, NSSAs may be either 'stubby' or 'totally stubby'. If an NSSA is 'totally stubby', the default route originated by the NSSA ABRs must be a Type-3/Network-Summary LSA. This ensures that the inter-area traffic is routed to the backbone, as a Type-3 default summary route will always be preferred over an externally originated Type-7 default summary.
+
+Type-7 LSAs that are to be translated into Type-5 LSAs MUST have their forwarding address set; this non-zero forwarding address is copied into the Type-5 LSA. NSSA ASBRs will use the next hop of the external route if it is connected to an interface that is active in OSPF. If the next hop interface of the external route is not active in OSPF, another interface running OSPF on the ASBR may be used.
+
 OSPF PACKETS
 
-OSPF runs directly over IP, using protocol number 89. For type and format details, see [packet-types] and [packet-formats]. 
+OSPF runs directly over IP, using protocol number 89. For type and format details, see [packet-types] and [packet-formats].
