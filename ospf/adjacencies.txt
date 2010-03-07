@@ -1,0 +1,28 @@
+OSPF ADJACENCIES
+
+Not every pair of neighbour routers will become adjacent.
+
+HELLO PROTOCOL
+The 'Hello' protocol is responsible for establishing and maintaining neighbour relationships, as well as verifying that communication between neighbours is bidirectional. Hello packets are sent periodically out of every OSPF enabled interface. The Hello-Interval timer is configurable on a per-interface basis.
+
+From the perspective of a router 'A', bidirectional communication with a neighbouring router 'B' is verified when 'A' receives a Hello from 'B' with its own RID in the neighbour list.
+
+On broadcast and NBMA networks, the Hello Protocol elects a DR to minimise the amount of routing protocol traffic required for the network as the number of OSPF routers on the multi-access network increases.
+
+The Hello protocol functions differently, depending on the network type of the interface in question. There are four types of networks to consider:
+* Point-to-Point
+* Broadcast
+* Non-broadcast multiple access (NBMA)
+* Point-to-multipoint
+
+On point-to-point networks, Hello packets are multicast to the AllSPFRouters address; once bidirectional communication is established, the interface transitions to the 'P2P' state, without the election of a DR.
+
+On broadcast networks, Hello packets are periodically multicast to the AllSPFRouters address; if multiple OSPF routers are detected, a DR and possibly a BDR are elected.
+
+On NBMA networks, a DR is elected, however manual configuration is required on each candidate DR, listing all routers attached to the NBMA network. A candidate DR sends Hellos to all other candidate DRs when its interface to the NBMA network first comes up; this is an attempt to determine if there is an existing DR on the network. Once a router on an NBMA network is elected DR, it begins sending Hellos to all other routers on the NBMA network.
+
+On point-to-multipoint networks, a router sends Hello packets to all neighbours it can communicate with directly. These neighbours may be dynamically discovered or manually configured.
+
+DATABASE SYNCHRONISATION
+
+Once neighbours have been discovered, bidirectional communication established, and adjacencies formed (subject to several rules), neighbours exchange information about their link-state databases, and if necessary exchange Link-State Update packets
