@@ -25,4 +25,14 @@ On point-to-multipoint networks, a router sends Hello packets to all neighbours 
 
 DATABASE SYNCHRONISATION
 
-Once neighbours have been discovered, bidirectional communication established, and adjacencies formed (subject to several rules), neighbours exchange information about their link-state databases, and if necessary exchange Link-State Update packets
+Once neighbours have been discovered, bidirectional communication established, and adjacencies formed (subject to several rules), neighbours exchange information about their link-state databases, and if necessary exchange Link-State Update packets to ensure that the link-state databases on both routers contain the same LSAs.
+
+Once an adjacency is formed, the routers begin the "Database Exchange Process"; the routers form a master/slave relationship and send eachother "Database Description" packets, which provide a summary of each LSA in the database. When a neighbour sees an LSA that is more recent than its own database copy (or that does not exist in its database at all), it makes a note that this newer LSA should be requested.
+
+Each DD packet has a sequence number. DD packets are sent by the master (polls); the slave sends a DD packet with the same sequence number (responses), which act as an acknowledgement. Polls and responses contain LSA summary information. Only the master is permitted to retransmit; this is done at fixed intervals.
+
+Each DD packet contains an 'M-bit', which indicates that there are more DD packets to follow. The exchange process is complete when both routers have sent and received a DD packet with the 'M-bit' set to 0. If the master finishes transmitting its database summary but the slave still has more to send, the master continues transmitting DD packets with no LSA summary data, in order to advance the sequence number, which allows the slave to finish its transmission.
+
+Once both routers have completed their database summary transmission and all outstanding Link State Requests have been satisfied, the link-state databases are deemed to be synchronised, and the neighbours are considered fully adjacent.
+
+The adjacency is used by the flooding process as soon as the database exchange process begins; this allows new LSAs to be flooded immediately, decreasing the time taken for database synchronisation to occur.
