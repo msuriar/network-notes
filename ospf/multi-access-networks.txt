@@ -1,0 +1,34 @@
+MULTI-ACCESS NETWORKS
+
+Multi-access networks function slightly differently within OSPF. In order to minimise routing protocol overhead on broadcast/NBMA networks with large numbers of attached routers.
+
+Every broadcast/NBMA network must have a designated router (DR). The DR performs two main functions:
+
+* It originates a Type-3/Network LSA on behalf of the multi-access network. This LSA lists the set of routers (including the DR itself) currently attached to the network. The network LSA has a Link State ID of the interface IP address of the DR. The network number of the multi-access network can then be derived using this Link State ID and the associated subnet mask.
+
+* The DR becomes adjacent to all other routers on the multi-access network. It acts as a hub for any LSA flooding across the multi-access network.
+
+The DR is elected as part of the Hello protocol. A router's Hello packet contains its Router Priority, which is configurable on a per interface basis. When a router's interface to a multi-access network first becomes functional, it waits and listens to Hello packets to determine if there is an existing DR on the network. If so, this DR is accepted, even if it has a lower priority. OSPF DR elections are *not pre-emptive*. (This is done to minimise the reconvergence/flooding caused by a change to the DR).
+
+The backup designated router (BDR) is elected to minimise the reconvergence time should the DR ever fail. The BDR maintains full adjacencies with all other routers on the multi-access network, however it does not originate a Type-3/Network LSA for the network. If/when the DR fails, the BDR takes over very quickly, and network disruption is limited to the time it takes to flood new LSAs announcing the change in DR. If there were no BDR, then the failure of a DR would result in a new DR election, and the creation of new adjacencies between the newly-elected DR and all the other routers on the network.
+
+DR ELECTION
+
+When a router initially brings up its interface to a multi-access network, both the DR and BDR are set to 0.0.0.0.
+
+The list of neighbours on this network is examined (neighbours being routers with whom bidirectional communication has been established. Any routers with a priority of 0 are discarded. The following steps are then performed.
+
+1) Note the values of DR and BDR being advertised by each neighbour, for comparison purposes.
+
+2) Calculate a new BDR.
+	* Only routers that have not declared themselves to be the DR are eligible to be elected BDR.
+	* If one or more routers have declared themselves BDR (i.e. they are declaring themselves BDR in their Hello packets, and not declaring themselves as DR), the router with the highest priority is selected to be the BDR. (The highest RID is used as a tiebreaker).
+	* If no routers have declared themselves BDR, again, choose the one with the highest priority.
+
+3) Choose a new DR, following a similar procedure for electing the BDR. If no routers have declared themselves to be the DR, the DR is set to the previously elected BDR.
+
+4) If this router is now the newly elected DR or BDR, or is no longer the DR or BDR, repeat steps 2 and 3, at which point the DR/BDR election is complete.
+
+On NBMA networks, DRs/BDRs must begin unicasting Hello packets to all neighbours in state DROther.
+
+The DR/BDR election may cause the identities of the DR and/or the BDR to change; if this is the case, then some adjacencies may need to ceased, and new ones formed.
