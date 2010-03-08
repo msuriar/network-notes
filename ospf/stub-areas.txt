@@ -1,0 +1,33 @@
+STUB AREAS
+
+Many OSPF areas are do not originate AS-external LSAs, nor do they require detailed information about the topology of other areas. In these cases, a default route towards the ABRs is often sufficient to ensure connectivity to inter-area and AS external destinations.
+
+OSPF facilitates such topologies through the use of stub areas. In standard stub areas, Type-4/ASBR-Summary and Type-5/AS-External LSAs are not flooded in to stub areas; they are replaced by a single summary default route originated by one or more of the ABRs. This summary default is flooded only through the stub area.
+
+All routers within a stub area must agree that the area is a stub; if this agreement is not in place, OSPF adjacencies will not form.
+
+Virtual links may not be configured through a stub area; further more, ASBRs may not be located internal to a stub area.
+
+TOTALLY STUBBY AREAS
+
+This is a Cisco term, which refers to an extension to the stub area concept. In addition to restricting the flood of Type-4/ASBR-Summary and Type-5/AS-External LSAs into a stub area, when a totally stubby area is configured, no Type-3/Network-Summary LSAs are originated by the area's ABRs. All inter-area traffic is then routed by the default summary route, with only intra-area traffic relying upon specific information in the link-state database.
+
+RFC 2328 leaves the question of whether Type-3/Network-Summary LSAs should be originated into stub areas open; Cisco chooses to refer to a stub area where no Type-3/Network LSAs are present as a totally stubby area.
+
+NOT-SO-STUBBY-AREAS [RFC 3101]
+
+One limitation of stub areas is their inability to support ASBRs. There are often instances where it is beneficial for a non-backbone area to be able to inject AS-External routes, but to only have default routes to for inter-area traffic.
+
+OSPF supports this functionality though the use of an OSPF option, the NSSA (N-bit). All routers within an NSSA must have the N-bit set in their Hello packets, otherwise adjacencies will not form.
+
+Any router within an NSSA may originate a Type-7/NSSA-External LSA, detailing the reachability of AS-external destinations. Type-7 LSAs are never flooded beyond their originating area. As with stub areas, Type-4/ASBR-Summary and Type-5/AS-External LSAs are not flooded in to NSSAs, nor are they originated there.
+
+In order to allow OSPF routers outside of the NSSA to reach AS-External destinations advertised within an NSSA, NSSA ABRs perform translation of Type-7/NSSA-External LSAs in to Type-5/AS-External LSAs for origination into the backbone. From this point, these Type-5 LSAs will be flooded throughout the rest of the OSPF AS as per OSPF's normal flooding logic.
+
+NSSA ABRs may be configured with area address ranges for AS-External addresses, which result in multiple Type-7 LSAs being translated into a single Type-5 LSA throughout the rest of the OSPF AS. The NSSA border routers that perform 7-5 translation are configurable; in the absence of configuration, a translator is elected. (Cisco use the ABR with the highest RID as the 7-5 translator).
+
+NSSA ABRs should originate a default Type-7 LSA into the NSSA. This default should never be translated into a Type-5 LSA; however, a default route originated by an NSSA internal ASBR may be translated into a Type-5 LSA and flooded throughout the rest of the AS. This is controlled by the 'P-bit' (propagate) in the Type-7 LSA.
+
+Like Type-5 stub areas, NSSAs may be either 'stubby' or 'totally stubby'. If an NSSA is 'totally stubby', the default route originated by the NSSA ABRs must be a Type-3/Network-Summary LSA. This ensures that the inter-area traffic is routed to the backbone, as a Type-3 default summary route will always be preferred over an externally originated Type-7 default summary.
+
+Type-7 LSAs that are to be translated into Type-5 LSAs MUST have their forwarding address set; this non-zero forwarding address is copied into the Type-5 LSA. NSSA ASBRs will use the next hop of the external route if it is connected to an interface that is active in OSPF. If the next hop interface of the external route is not active in OSPF, another interface running OSPF on the ASBR may be used.
