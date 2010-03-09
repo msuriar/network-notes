@@ -1,0 +1,72 @@
+ICMP PACKET FORMAT
+
+Header below - ICMP header must always be 8 bytes. First 4 bytes are always the same, latter 4 vary depending on type/code of message.
+
+    0                7               15                               31
+    +----------------+----------------+--------------------------------+
+    |     Type       |     Code       |         Checksum               |
+    +----------------+----------------+--------------------------------+
+    |                Data (dependent on type/code)                     |
+    +------------------------------------------------------------------+
+
+Type: 8-bit unsigned integer.
+
+Code: 8-bit unsigned integer.
+
+Checksum: 16-bit one's complement sum of ICMP payload.
+
+ICMP UNREACHABLE PACKET
+
+    0                7               15                               31
+    +----------------+----------------+--------------------------------+
+    |     Type       |     Code       |         Checksum               |
+    +----------------+----------------+--------------------------------+
+    |                       Unused (must be 0)                         |
+    +------------------------------------------------------------------+
+    |                                                                  |
+    /   IP header of original packet + first 8 bytes of IP datagram    /
+    |                                                                  |
+    +------------------------------------------------------------------+
+
+All ICMP errors must include the IP headers + first 8 data bytes.
+
+ICMP ECHO REQUEST/REPLY (ping)
+
+Used to determine reachability of a host, as well as the round-trip delay between the client and the server. A lack of response to an ICMP Echo-Request may indicate that it is unreachable; however, it may simply be that an intermediate security device is blocking ICMP packets.
+
+    0                7               15                               31
+    +----------------+----------------+--------------------------------+
+    |     Type       |     Code       |         Checksum               |
+    +----------------+----------------+--------------------------------+
+    |          Identifier             |      Sequence Number           |
+    +---------------------------------+--------------------------------+
+    |                                                                  |
+    /                     Optional Data                                /
+    |                                                                  |
+    +------------------------------------------------------------------+
+
+Type 0 = Echo reply
+Type 8 = Echo request
+
+Code is always 0.
+
+Identifier is used to ID differentiate between multiple ping processes on the same machine.
+
+Sequence number starts at 0 and is incremented by the sender with every subsequent request.
+
+ICMP UNREACHABLE TIME EXCEEDED IN TRANSIT
+
+Indicates that an intermediate device between the source and destination has decremented the TTL field of the IP packet to 0.
+
+Type = 11
+Code = 0 (Time exceeded in transit)
+
+Code 1 indicates a timeout during reassembly of a fragmented packet.
+
+TRACEROUTE
+
+Traceroute is a utility used to determine the route IP packets travel between two hosts. It makes use of the ICMP Unreachable TTL exceeded error by crafting packets with a successively increasing TTL. This results in each L3 device along the path generating an ICMP TTL-exceeded message. The source IP address of each TTL-Exceeded message provides the IP address of the intermediate router generating it.
+
+Traceroute comes in two flavours: UDP and ICMP. UDP traceroute uses port 33434 as a starting point, and increments by one for each subsequent packet. The traceroute is determined to be complete through the receipt of an ICMP port unreachable error. (This assumes that the target host is not listening on the UDP port that the traceroute probe packet is destined for).
+
+ICMP traceroute uses ICMP Echo-Request packets. This has the advantage of being more likely to pass through security devices. The traceroute is complete when an ICMP Echo-Reply is received from a target host.
