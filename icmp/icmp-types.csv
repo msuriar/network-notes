@@ -1,0 +1,20 @@
+Type,Description
+0,Echo Reply
+1,Reserved
+2,Reserved
+3,Destination Unreachable
+4,Source Quench
+5,Redirect Message
+6,Alternate Host Address
+7,Reserved
+8,Echo Request
+9,Router Advertisement
+10,Router Solicitation
+11,Time Exceeded
+12,Parameter Problem: Bad IP header
+13,Timestamp
+14,Timestamp Reply
+15,Information Request
+16,Information Reply
+17,Address Mask Request
+18,Address Mask Reply
