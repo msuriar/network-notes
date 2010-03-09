@@ -1,0 +1,9 @@
+State,Description
+DOWN,No Hellos heard within dead interval. Hello's sent at pollo interval on NBMA networks.
+ATTEMPT,NBMA only neighbour state. No information has been received recently; but further communication should be attempted.
+INIT,A Hello packet has recently been seend from this neighbour. The current router's RID has not appeared in the Hello meaning that bidirectional communication has not been established.
+2WAY,Bidirectional communication has been established. (B)DR is selected from the set of neighbours in the 2WAY state or greater.
+EXSTART,Adjacency establishment commenced. Routers determining Master/Slave relationship prior to database exchange.
+EXCHANGE,Database description packets being exchange to enable database synchronisation.
+LOADING,Database exchange complete, but there are LSRs still oustanding.
+FULL,Neighbours are fully adjacent, and databases are synchronised.
