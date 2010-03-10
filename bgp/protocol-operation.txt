@@ -1,0 +1,37 @@
+BGP v4 PROTOCOL OPERATION [RFC 4271]
+
+BGP (Border Gateway Protocol) is an exterior gateway protocol primarily designed to enable the exchange of network-layer-reachability-information (NLRI) between autonomous systems. BGP is built around the concept of AS-PATHs; each NLRI contains an ordered list of all the autonomous systems traversed by that particular routing update. This provides a means of both loop avoidance (a BGP speaker receiving an update containing its own AS in the AS-PATH can safely assume that a loop has occurred, and must discard the update); as well as one of many decision criteria that can be used to determine the 'best' path to a given destination, should multiple such paths exist.
+
+BASIC BGP OPERATION
+Each BGP speaker is considered to be part of an AUTONOMOUS SYSTEM (AS). This AS is described as a 16-bit integer in the range of 0-65,535, with AS numbers from 64,512 and greater being considered 'private' (i.e. not for use on the public internet).
+
+BGP speakers are manually configured to connect to PEERs. Each peer has specific attributes (most importantly remote IP address and remote AS number, among others), which are used by BGP to establish a peering relationship based on pre-agreed share parameters. BGP peerings are established over TCP, using TCP port 179. TCP handles all fragmentation/sequencing issues implicitly.
+
+A TCP connection is established between two BGP speakers; they then exchange BGP messages to open and confirm the peering parameters. Once a peering is established, each peer sends all its BGP routes (subject to some restrictions, both protocol and policy based) to its neighbour. After this initial exchange, BGP updates are only sent incrementally when some change in state requires it. (Newly advertised/withdrawn prefixes, a change in best path, etc).
+
+KEEPALIVE messages may be sent periodically to ensure that the connection is live; this is negotiated as part of opening/confirming the BGP peering. As BGP does not perform periodic refreshes of the routing table, there is no guarantee that there will be sufficient background traffic to ascertain the health of a neighbour.
+
+NOTIFICATION messages are sent in response to errors or special conditions, and result in the BGP peering being shut down.
+
+Peers in a different AS are referred to as EXTERNAL (or EBGP) peers; peers within the same AS are INTERNAL (IBGP) peers.
+
+If an AS has multiple BGP speakers and is providing transit for other ASes, care must be taken that the BGP state is consistent throughout the AS. This is also the case when IBGP is used for advertisement of internal services (e.g. virtual IPs). Consistent state can be achieved through several means:
+* IGP synchronisation: BGP routes are not advertised to a peer until they are detected as being advertised through the local IGP. This reduces the requirements for running BGP to only 'edge' routers, however it requires that all BGP routes be redistributed into the AS' IGP to ensure full reachbility.
+* Full IBGP mesh: all routers within an AS run BGP, and have a peering to all other BGP speakers within the AS. This ensures full propagation of BGP information throughout the AS, and removes the requirement for BGP routes to be redistributed into the IGP. However, in ASes with a large number of routers, configuration management becomes troublesome.
+* Route reflectors and BGP confederations are two approaches that seek to simplify the establishment of a full IBGP mesh. See separate sections on both.
+
+ROUTES
+A route is defined as a set of destinations combined with the attributes of a path to reach those destinations. A set of destinations is expressed as an IP prefix. Each UPDATE message may contain more than one IP prefix, however all the prefixes in a single update message MUST be associated with the same path.
+
+A BGP speaker can withdraw routes in three ways:
+1) Explicitly, using the 'Withdrawn routes' field of an update message.
+2) Implicitly, by sending a replacement route with the same NLRI
+3) Implicitly, by closing a BGP connection. When a BGP session is closed, all routes exchanged between the pair of speakers are removed from the RIB.
+
+RIBS (ROUTING INFORMATION BASES)
+BGP maintains three (conceptual) RIBs:
+
+1) Adj-RIBs-In: routing updates advertised to this BGP speaker from inbound update messages.
+2) Loc-RIB: Local BGP RIB, containing all local BGP routes, as well as all routes from Adj-RIBs-In that have been selected after application of local policy and the BGP decision process.
+3) Adj-RIBs-Out: routes that have been selected for advertisement to other peers, after BGP path selection and any outbound policy have been applied.
+
