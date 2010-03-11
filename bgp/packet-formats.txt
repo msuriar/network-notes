@@ -1,0 +1,176 @@
+BGP PACKET FORMATS
+
+All BGP messages have a fixed size header of 19 octets. There may or may not be data following the header, depending upon the BGP message type.
+
+BGP HEADER:
+
+    0                                                                 31
+    +-----------------------------------------------------------------+
+    |                             Marker                              |
+    +-----------------------------------------------------------------+
+    |                             Marker                              |
+    +-----------------------------------------------------------------+
+    |                             Marker                              |
+    +-----------------------------------------------------------------+
+    |                             Marker                              |
+    +--------------------------------+----------------+---------------+
+    |            Length              |    Type        |
+    +--------------------------------+----------------+
+
+Marker: 16 octet field included for compatibility. MUST be set to all 1s.
+
+Length: Total length of the BGP message, including the header, in octets. 16-bit integer, MUST beat least 19 and no greater than 4096, and may be further constrained depending on message type.
+
+Type: 8-bit integer, taking one of four values:
+
+1 - OPEN
+2 - UPDATE
+3 - NOTIFICATION
+4 - KEEPALIVE
+5 - ROUTE-REFRESH (See [RFC 2918])
+
+
+OPEN MESSAGE:
+                                                      +----------------+
+                                                      |     Version    |
+    +--------------------------------+----------------+----------------+
+    |    My Autonomous System        |         Hold Time               |
+    +------------------------------------------------------------------+
+    |                       BGP Identifier                             |
+    +---------------+--------------------------------------------------+
+    | Opt Param Len |        Optional Parameters (variable)            |
+    +---------------+--------------------------------------------------+
+
+Version: 1-octet field specifying the version running on the originator.
+
+My Autonomous System: 2-octet field specifying the autonomous system number of the originator.
+
+Hold time: 2-octet field specifying hold time in seconds. The receiver compares the value of the received hold time and its configured hold time; the lower of the two values is selected, as long as it is valid. Hold time MUST be 0 (indicating no keepalives) or at least 3 seconds.
+
+BGP Identifier: router ID of the originator. IPv4 address, normally the highest configured loopback address, else the highest configured physical address.
+
+Optional parameter length: 8-bit integer, length in octets of the optional parameters in this message. 0 length is permitted.
+
+Optional parameters: 1 or more TLV triples. (1-octet type, 1 octet length, 0 or more octets value). [RFC 3392] describes the capabilities advertisement optional parameter.
+
+Minimum length of BGP open is 29 octets, including the header.
+
+UPDATE MESSAGE:
+
+    +--------------------------------+
+    |Withdrawn Routes Length (16 bit)|
+    +--------------------------------+
+    |Withdrawn Routes (variable)     |
+    +--------------------------------+
+    |Total Path Attr. Length (16 bit)|
+    +--------------------------------+
+    |Path Attributes (variable)      |
+    +--------------------------------+
+    |NLRI (variable)                 |
+    +--------------------------------+
+
+
+Withdrawn routes length: 2-octet field, indicating length in octets of the following withdrawn routes.
+
+Withdrawn routes: variable length field consisting of the (Length, Prefix) tuples describing the routes to be withdrawn. Length is always one octet, holding the integer value of the prefix length.Prefix contains an IP address prefix, followed by sufficient trailing bits to make the end of the field fall on an octet boundary. (e.g. 10/8 could fit in two octets, one length, one prefix).
+
+    +----------------+
+    | Length (8 bit) |
+    +----------------+
+    | Prefix (var)   |
+    +----------------+
+
+Total path attribute length: 2-octet length in octets of all path attributes. A value of zero indicates there are no path attributes/NLRI in this message.
+
+Path attributes: Variable length field listing the path attributes associated with the NLRI contained in this update. Each attribute is a triple consisting of (Attribute Type, Attribute Length, Attribute value).
+
+Attribute type: 2 octect field. First octet consists of flags, second octet is type code:
+
+    +-+-+-+-+----+-------------------+
+    |O|T|P|E|UUUU| Type code (8 bit) |
+    +-+-+-+-+----+-------------------+
+
+O: Optional bit. 0 = optional, 1 = well-known.
+T: Transitive bit. 0 = non-transitive, 1 = transitive. (For well-known attributes, MUST be 1)
+P: Partial bit. 0 = Optional transitive attribute is complete; 1 = optional transitive attribute is partial. For well-known and optional non-transitive attributes, this MUST be set to 0.
+E: Extended length bit. 0 = indicates length field is 1 octet long; 1 = indicates length is two octets long.
+U: unused, MUST be set to 0.
+
+Type codes:
+1: ORIGIN
+2: AS_PATH
+3: NEXT_HOP
+4: MULTI_EXIT_DISCRIMINATOR
+5: LOCAL_PREFERENCE
+6: ATOMIC_AGGREGATE
+7: AGGREGATOR
+8: COMMUNITY
+9: ORIGINATOR_ID
+10: CLUSTER_LIST
+
+BGP PATH ATTRIBUTES
+
+ORIGIN (Type code 1)
+- Well known mandatory attribute
+- Defines origin of path information
+- Data octet can assume 3 values:
+    0 => IGP (BGP network statement, and associated route in IGP table)
+    1 => EGP (N/A, deprecated)
+    2 => INCOMPLETE (redistributed from another protocol)
+
+AS_PATH (Type code 2)
+- Well known mandatory attribute; composed as a sequence of AS path segments.
+- Each AS path segment is represented by a triple: (Path segment type, Path segment length, Path segment value).
+- Path segment type is a 1-octet field, with 4 defined values:
+    1 => AS_SET (unordered list of ASes the route has passed through)
+    2 => AS_SEQUENCE (ordered sequence of ASes the route has passed through)
+    3 => AS_CONFED_SET (unordered list of confed ASes the route has passed through)
+    4 => AS_CONFED_SEQUENCE (ordered list of confed ASes the route has passed through)
+
+- Path segment length is a 1-octet field listing the number of ASs (NOT octets) in this path segment.
+- Path segment value is a list of one or more AS numbers, each taking two octets.
+
+NEXT_HOP (Type code 3)
+ - Well known mandatory attribute; unicast next hop address of the router to be used to forward packets to each of the destination in the NLRI section of the update. (4 octets)
+
+MULTI_EXIT_DISCRIMINATOR (Type code 4)
+- Optional non-transitive attribute; 4 octet unsigned integer.
+- Used in BGP decision process to choose among multiple entry points to a directly adjacent AS.
+
+LOCAL_PREFERENCE (Type code 5)
+- Well-known discretionary attribute; 4 octet unsigned integer.
+- Used to inform other internal peers of a speakers degree of preference for an advertised route.
+
+ATOMIC_AGGREGATE (Type code 6)
+- Well-known discretionary attribute, of length 0.
+- Indicates that this route has been aggregated at some point in its journey.
+
+AGGREGATOR (Type code 7)
+- Optional transitive attribute, 6 octets long.
+- AS number that formed the aggregate route (2 octets)
+- BGP RID of the aggregating router.
+
+COMMUNITY (Type code 8) [RFC 1997]
+- Optional transitive attribute, 4 octet field.
+- Used as a criteria for matching against in order to enforce policy.
+
+ORIGINATOR_ID (Type code 9) [RFC 4456]
+- Optional non-transitive attribute, 4 octet field.
+- Inserted by a route-reflector and configured as the BGP RID of the originator of a reflected route.
+- Prevents loops if a route is reflected through multiple RRs/clusters.
+
+CLUSTER_LIST (Type code 10) [RFC 4456]
+- Optional non-transitive attribute, variable length.
+- Sequence of route reflectors through which a route has been reflected.
+
+NETWORK LAYER REACHABILITY INFORMATION
+- List of (Length, prefix) tuples describing the IP prefixes to which the previous path attributes apply.
+- As per withdrawn routes.
+
+BGP KEEPALIVE MESSAGE
+
+BGP keepalive messages are sent every (holdtime/3), at an interval of no less than 1 second. If holdtime = 0, no keepalives are sent. Keepalive messages consist only of the 19-octet BGP header, with no data.
+
+BGP NOTIFICATION MESSAGE
+
+The BGP notification message is sent when 
