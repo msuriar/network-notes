@@ -173,4 +173,51 @@ BGP keepalive messages are sent every (holdtime/3), at an interval of no less th
 
 BGP NOTIFICATION MESSAGE
 
-The BGP notification message is sent when 
+The BGP notification message is sent when an error condiction is detected; transmission or receipt of a notification message causes a BGP peer to immediately close.
+
+    0               7                15                               31
+    +----------------+----------------+--------------------------------+
+    | Error code     | Error subcode  | Data (variable)                |
+    +----------------+----------------+--------------------------------+
+
+Error code: 1-octet unsigned integer, indicating type of notification.
+
+1 => Message Header Error
+2 => OPEN Message Error
+3 => UPDATE Message Error
+4 => Hold Timer Expired
+5 => Finite State Machine Error
+6 => Cease
+
+Error subcode: 1-octet unsigned integer, providing more detail about the specific cause of the error.
+
+Message Header error subcodes:
+    1 => Connection not synchronised
+    2 => Bad message length
+    3 => Bad message type
+
+OPEN message error subcodes:
+    1 => Unsupported version number
+    2 => Bad peer AS
+    3 => Bad BGP identifier (a.k.a. bad RID)
+    4 => Unsupported optional parameter
+    5 => Authentication failure [DEPRECATED]
+    6 => Unacceptable hold time
+
+UPDATE message error subcodes:
+    1 => Malformed attribute list
+    2 => Unrecognised well-known attribute
+    3 => Missing well-known attribute
+    4 => Attribute flags error
+    5 => Attribute length error
+    6 => Invalid ORIGIN attribute
+    7 => AS routing loop [DEPRECATED]
+    8 => Invalid NEXT_HOP attribute
+    9 => Optional attribute error
+   10 => Invalid network field
+   11 => Malformed AS_PATH
+
+Data: variable length field, used to diagnose the reason for NOTIFICATION. Content varies depending on error code/subcode.
+
+Message length = 21 + data length
+ => 19 header octets, 1 code, 1 subcode, data
