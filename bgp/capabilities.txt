@@ -1,0 +1,47 @@
+BGP CAPABILITIES ADVERTISEMENT [RFC 5492]
+
+BGP peers may use the optional parameter 'Capabilities' within the BGP OPEN message to advertise certain capabilities to neighbours. (e.g. route refresh, multi-protocol support)
+
+The capabilities parameter (parameter type 2) consists of one or more TLV triples:
+
+    0               7                15
+    +----------------+----------------+--------------------------------+
+    |Capability code |Capability len  | Capability value (variable len)|
+    +----------------+----------------+--------------------------------+
+
+Capability code: 1 octet unsigned integer, uniquely identifying each capability.
+
+Capability length: 1 octet, contains the length of the VALUE field, in octets.
+
+When a BGP speaker that supports capability advertisement sends an OPEN to a peer; the 'Capability parameter' MAY be included. A speaker that supports a specific capability may use that capability with a peer once it is determined that the peer supports this capability. (Through the presence of this capability in the 'Capability' optional parameter of the OPEN received from the neighbour.)
+
+If the neighbour responds with a NOTIFICATION message with the Error Subcode set to 'Unsupported optional parameter', the originating speaker SHOULD attempt to reestablish the peering, this time omitting the capabilities optional parameter.
+
+If a BGP speaker that supports a given capability determines that a peer does not support this capability, the speaker MAY send a NOTIFICATION and terminate the peering. The Error Subcode of the NOTIFICATION should be set to 'Unsupported Capability'; the data field SHOULD contain the list of capabilities that caused the error. If a NOTIFICATION is received with an Error Subcode of 'unsupported capability', the peering in question SHOULD NOT be automatically reestablished.
+
+
+ROUTE REFERESH CAPABILITY [RFC 2918]
+
+Prior to the invention of route-refresh, the only means of re-applying inbound routing policy were:
+
+1) A shutdown and re-establishment of the BGP neighbour relationship.
+2) 'soft-reconfiguration'; maintaining a copy of all routes sent by a peer, including those dropped by inbound policy.
+
+Both of these options have limitations, either in terms of possible reconvergence or increased memory/CPU overhead on BGP speakers.
+
+Route refresh provides the abiilty for a BGP speaker to dynamically re-request all prefixes from its neighbour.
+
+The route refresh capability is advertised using a capability code of 2, and a capability length of 0.
+
+Route refresh makes use of a new BGP message type, ROUTE-REFRESH (message type 5).
+
+    0                               15               23               31
+    +--------------------------------+----------------+----------------+
+    |    Address Family Identifier   |  Reserved      |    SAFI        |
+    +--------------------------------+----------------+----------------+
+
+Address family identifier: 16-bit, see [RFC 4760]
+Reserved: should be set to all zeroes by transmitter, ignored by receiver.
+Subsequent address family identifier: 8-bit, see [RFC 4760]
+
+Once a BGP speaker has determined that a neighbour supports the route refresh capability, it may at any time send a route-refresh message for any <AFI,SAFI> that was advertised during the OPEN procedure. This should result in the peer retransmitting all of its routing information.

@@ -203,6 +203,7 @@ OPEN message error subcodes:
     4 => Unsupported optional parameter
     5 => Authentication failure [DEPRECATED]
     6 => Unacceptable hold time
+    7 => Unsupported Capability [RFC 5492] (Data should contain the list of capabilities that caused the notification.)
 
 UPDATE message error subcodes:
     1 => Malformed attribute list
