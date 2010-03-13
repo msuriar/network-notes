@@ -1,0 +1,24 @@
+BGP COMMUNITIES [RFC 1997]
+
+BGP is intended to provide routing across the internet, which often involves multiple layers of policy at various peering points. In the protocol as defined by the original BGP-4 specification (RFC 1771, updated by RFC 4271), the only means available for this were either matching against IP prefixes or AS paths. Neither of these mechanisms allowed semantic information to be encoded in a routing update and propagated across ASes.
+
+BGP communities are a means of grouping destination networks together logically, based upon some defined schema, and allowing routing policy decisions to be made based on membership (or non-membership) of a give community.
+
+BGP communities provide a new path attribute, 'COMMUNITIES', which has attribute type code 8. This is an OPTIONAL, TRANSITIVE attribute.
+
+The communities attribute is of variable length, and consists of a sequence of 4-octet communities.
+
+Communities are encoded such that the first two octets of the community are the AS number of the community's originator.
+
+Community values between:
+0:0 - 0:65535 and 65535:0 and 65535:65535
+
+Are reserved (As AS numbers 0 and 65535 will never be assigned)
+
+The following well-known communities have been defined, and shall be implemented by any community-aware BGP speaker:
+
+NO_EXPORT (0xFFFFFF01, 65535:65281): Any route carrying a community attribute containing this value MUST NOT be advertised beyond a confederation boundary. (Or an AS boundary, if that AS is not a member of a BGP confederation).
+
+NO_ADVERTISE (0xFFFFFF02, 65535:65282): This route MUST NOT be advertised to other BGP peers.
+
+NO_EXPORT_SUBCONFED: This route MUST NOT be advertised to EBGP peers, including peers in other member ASes within a BGP confederation).
