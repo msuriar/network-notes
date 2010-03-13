@@ -1,0 +1,14 @@
+BGP DECISION PROCESS
+
+Feasible: recursed next hop is reachable in the IGP routing table.
+Weight: locally defined, Cisco proprietary attribute. Higher weight is more preferred.
+Local-Pref: set within an AS to control which  exit point for a prefix is more preferred. Higher LP is preferred.
+Locally originated: prefer path which was locally (i.e. on this device) originated via a network statement, aggregate address statement, or redistribution from another protocol.
+AS-path length: lowest AS-path length wins.
+Origin: IGP is more preferred than EGP, which is more preferred than INCOMPLETE
+MED: Used as a tiebreak between two different paths to the same AS; lowest MED is more preferred.Path type: EBGP most preferred, IBGP
+IGP cost to next hop: lowest cost wins.
+Multiple EBGP paths: prefer oldest path. (i.e. one that was installed in the RIB first.)
+BGP RID: prefer route from speaker with the numerically lowest RID.
+Cluster list length: If originator/RID is the same for multiple paths, use the path with the shortest 'cluster list' attribute. (RR only)
+Neighbour address: prefer the path from the lowest neighbour address (peer address, rather than RID).

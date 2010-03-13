@@ -34,4 +34,3 @@ BGP maintains three (conceptual) RIBs:
 1) Adj-RIBs-In: routing updates advertised to this BGP speaker from inbound update messages.
 2) Loc-RIB: Local BGP RIB, containing all local BGP routes, as well as all routes from Adj-RIBs-In that have been selected after application of local policy and the BGP decision process.
 3) Adj-RIBs-Out: routes that have been selected for advertisement to other peers, after BGP path selection and any outbound policy have been applied.
-

@@ -1,0 +1,7 @@
+State,Description
+Idle,Administratively down.
+Connect,Waiting for a TCP connection to complete.
+Active,Trying to initiate a TCP connection.
+OpenSent,Open message sent; waiting for responding Open/Notification.
+OpenConfirm,Open message sent and received; waiting for a Keepalive/Notification.
+Established,Up and running.
